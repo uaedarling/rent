@@ -1,0 +1,4 @@
+installed.lock
+error_log
+*.log
+.env

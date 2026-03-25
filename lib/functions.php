@@ -1,36 +1,82 @@
 <?php
 require_once __DIR__ . '/db.php';
 function generate_token() { return bin2hex(random_bytes(32)); }
-function log_message($channel, $recipient, $subject, $body, $status='sent', $error='') {
+function log_message($channel, $recipient, $subject, $body, $status = 'sent', $error = '') {
     $stmt = db()->prepare('INSERT INTO message_logs (channel, recipient, subject, body, status, error) VALUES (?,?,?,?,?,?)');
     $stmt->execute([$channel, $recipient, $subject, $body, $status, $error]);
 }
-// minimal smtp send (fallback). Replace with PHPMailer for production.
+// Send email using PHP mail() or log a warning when SMTP credentials are set.
+// For production with SMTP, install PHPMailer via Composer.
 function smtp_send($to, $subject, $html, $settings) {
-    if (empty($settings['smtp_host']) || empty($settings['smtp_user']) || empty($settings['smtp_pass'])) {
-        $headers = "MIME-Version: 1.0\r\nContent-type:text/html;charset=UTF-8\r\n";
-        $headers .= "From: ".($settings['from_email']??'no-reply@domain.com')."\r\n";
-        $ok = mail($to, $subject, $html, $headers);
-        log_message('email', $to, $subject, strip_tags($html), $ok ? 'sent' : 'failed', $ok ? '' : 'mail-failed');
-        return $ok;
+    $from_email = $settings['from_email'] ?? 'no-reply@domain.com';
+    $from_name  = $settings['from_name']  ?? 'Rent Manager';
+    $headers  = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: " . $from_name . " <" . $from_email . ">\r\n";
+
+    if (!empty($settings['smtp_host']) && !empty($settings['smtp_user']) && !empty($settings['smtp_pass'])) {
+        // SMTP credentials are configured but full SMTP sending requires PHPMailer.
+        // Falling back to PHP mail() — install PHPMailer for proper SMTP/TLS support.
+        error_log('smtp_send: SMTP credentials set but PHPMailer not installed; using mail() fallback.');
+        log_message('email', $to, $subject, strip_tags($html), 'sent', 'smtp-fallback-mail');
     }
-    // Simple socket SMTP not covering TLS; for Gmail, use PHPMailer in production
-    log_message('email', $to, $subject, strip_tags($html), 'sent', 'smtp-fallback');
-    return true;
+
+    $ok = mail($to, $subject, $html, $headers);
+    log_message('email', $to, $subject, strip_tags($html), $ok ? 'sent' : 'failed', $ok ? '' : 'mail-failed');
+    return $ok;
 }
 function send_receipt_email($tenant_id, $payment_id) {
     $pdo = db();
     $stmt = $pdo->prepare('SELECT p.*, t.full_name, t.email, t.ledger_token, u.unit_no FROM payments p JOIN tenants t ON t.id=p.tenant_id JOIN units u ON u.id=t.unit_id WHERE p.id=?');
     $stmt->execute([$payment_id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmt->fetch();
     if (!$row) return false;
     $settings = get_settings();
-    $ledger_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']!='off' ? 'https':'http') . '://' . $_SERVER['HTTP_HOST'] . '/ledger.php?token=' . $row['ledger_token'];
-    $subject = "Payment Receipt - Unit " . $row['unit_no'] . " - " . $row['period_ym'];
-    $html = "<p>Dear " . htmlspecialchars($row['full_name']) . ",</p>";
-    $html .= "<p>We received your payment of " . number_format($row['amount_aed'],2) . " AED for " . $row['period_ym'] . " (Unit " . $row['unit_no'] . ").</p>";
-    $html .= "<p><a href='".$ledger_link."'>View your full payment history (ledger)</a></p>";
-    $html .= "<p>Thank you.</p>";
+    $company  = htmlspecialchars($settings['company_name'] ?? 'Rent Manager');
+    $host        = preg_replace('/[^a-zA-Z0-9.\-:]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+    $ledger_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+        . '://' . $host . '/ledger.php?token=' . $row['ledger_token'];
+    $receipt_no = '#' . str_pad($row['id'], 6, '0', STR_PAD_LEFT);
+    $period_fmt = date('F Y', strtotime($row['period_ym'] . '-01'));
+    $subject = "Payment Receipt – " . $receipt_no . " – Unit " . $row['unit_no'];
+    $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+        body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px}
+        .card{background:#fff;max-width:600px;margin:0 auto;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+        .header{background:#b91c1c;color:#fff;padding:24px 32px}
+        .header h1{margin:0;font-size:22px}.header p{margin:4px 0 0;opacity:.85;font-size:13px}
+        .body{padding:24px 32px}
+        table{width:100%;border-collapse:collapse;margin-top:16px}
+        td{padding:10px 0;border-bottom:1px solid #eee;font-size:14px}
+        td:first-child{color:#555;width:45%}td:last-child{font-weight:600}
+        .paid-stamp{display:inline-block;border:3px solid #16a34a;color:#16a34a;padding:6px 18px;
+            border-radius:4px;font-size:20px;font-weight:700;letter-spacing:2px;transform:rotate(-5deg);margin-top:16px}
+        .footer{background:#f9f9f9;padding:16px 32px;font-size:12px;color:#888;text-align:center}
+        a{color:#b91c1c}
+    </style></head><body>
+    <div class="card">
+      <div class="header">
+        <h1>' . $company . '</h1>
+        <p>Payment Receipt</p>
+      </div>
+      <div class="body">
+        <table>
+          <tr><td>Receipt No.</td><td>' . htmlspecialchars($receipt_no) . '</td></tr>
+          <tr><td>Issue Date</td><td>' . htmlspecialchars(date('d M Y')) . '</td></tr>
+          <tr><td>Tenant</td><td>' . htmlspecialchars($row['full_name']) . '</td></tr>
+          <tr><td>Unit</td><td>' . htmlspecialchars($row['unit_no']) . '</td></tr>
+          <tr><td>Period</td><td>' . htmlspecialchars($period_fmt) . '</td></tr>
+          <tr><td>Amount Paid</td><td>AED ' . number_format((float)$row['amount_aed'], 2) . '</td></tr>
+          <tr><td>Payment Date</td><td>' . htmlspecialchars($row['paid_at']) . '</td></tr>
+          <tr><td>Payment Method</td><td>' . htmlspecialchars($row['method']) . '</td></tr>
+        </table>
+        <div><span class="paid-stamp">PAID</span></div>
+        <p style="margin-top:20px;font-size:13px">
+          <a href="' . $ledger_link . '">View your full payment history (ledger)</a>
+        </p>
+      </div>
+      <div class="footer">Thank you for your payment. This is an automated receipt.</div>
+    </div>
+    </body></html>';
     return smtp_send($row['email'], $subject, $html, $settings);
 }
 function get_late_tenants() {
@@ -39,11 +85,11 @@ function get_late_tenants() {
     $ym = (new DateTime('now', new DateTimeZone($tz)))->format('Y-m');
     $pdo = db();
     $stmt = $pdo->query("SELECT t.id AS tenant_id, t.full_name, t.email, t.phone, t.due_day, t.grace_days, u.unit_no, u.monthly_rent_aed FROM tenants t JOIN units u ON u.id=t.unit_id WHERE u.status='active'");
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll();
     $late = [];
     foreach ($rows as $r) {
         $due_day = max(1, min(28, (int)$r['due_day']));
-        $due = new DateTime(date('Y-m-') . str_pad($due_day,2,'0',STR_PAD_LEFT), new DateTimeZone($tz));
+        $due = new DateTime(date('Y-m-') . str_pad($due_day, 2, '0', STR_PAD_LEFT), new DateTimeZone($tz));
         $cutoff = clone $due;
         $grace = (int)$r['grace_days'];
         if ($grace) $cutoff->modify("+{$grace} days");
@@ -53,7 +99,7 @@ function get_late_tenants() {
         $rent = (float)$r['monthly_rent_aed'];
         $now = new DateTime('now', new DateTimeZone($tz));
         if ($now > $cutoff && $paid + 0.0001 < $rent) {
-            $late[] = ['tenant_id'=>$r['tenant_id'],'full_name'=>$r['full_name'],'email'=>$r['email'],'phone'=>$r['phone'],'unit_no'=>$r['unit_no'],'rent'=>$rent,'paid'=>$paid,'balance'=>max(0,$rent-$paid),'period_ym'=>$ym];
+            $late[] = ['tenant_id' => $r['tenant_id'], 'full_name' => $r['full_name'], 'email' => $r['email'], 'phone' => $r['phone'], 'unit_no' => $r['unit_no'], 'rent' => $rent, 'paid' => $paid, 'balance' => max(0, $rent - $paid), 'period_ym' => $ym];
         }
     }
     return $late;
