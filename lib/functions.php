@@ -79,6 +79,31 @@ function send_receipt_email($tenant_id, $payment_id) {
     </body></html>';
     return smtp_send($row['email'], $subject, $html, $settings);
 }
+function send_password_reset_email($to, $reset_link, $settings) {
+    $company = htmlspecialchars($settings['company_name'] ?? 'Rent Manager');
+    $subject = 'Password Reset Request';
+    $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+        body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px}
+        .card{background:#fff;max-width:600px;margin:0 auto;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+        .header{background:#b91c1c;color:#fff;padding:24px 32px}
+        .header h1{margin:0;font-size:22px}.header p{margin:4px 0 0;opacity:.85;font-size:13px}
+        .body{padding:24px 32px;font-size:14px;color:#333;line-height:1.6}
+        .btn{display:inline-block;background:#b91c1c;color:#fff;padding:12px 28px;border-radius:4px;text-decoration:none;font-weight:700;margin:20px 0}
+        .footer{background:#f9f9f9;padding:16px 32px;font-size:12px;color:#888;text-align:center}
+    </style></head><body>
+    <div class="card">
+      <div class="header"><h1>' . $company . '</h1><p>Password Reset</p></div>
+      <div class="body">
+        <p>You requested a password reset. Click the button below to set a new password. This link expires in 1 hour.</p>
+        <a href="' . htmlspecialchars($reset_link) . '" class="btn">Reset Password</a>
+        <p>If you did not request this, you can safely ignore this email.</p>
+        <p style="font-size:12px;color:#999">Or copy this link: ' . htmlspecialchars($reset_link) . '</p>
+      </div>
+      <div class="footer">This is an automated message from ' . $company . '. Do not reply.</div>
+    </div>
+    </body></html>';
+    return smtp_send($to, $subject, $html, $settings);
+}
 function get_late_tenants() {
     $settings = get_settings();
     $tz = $settings['timezone'] ?? 'Asia/Dubai';

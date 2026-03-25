@@ -19,6 +19,7 @@ $nav_csrf = csrf_token();
   </div>
   <div class="text-sm">
     <?= $nav_user ?> &nbsp;
+    <a href="/profile.php" class="hover:underline">My Profile</a> &nbsp;
     <a href="/logout.php?token=<?= urlencode($nav_csrf) ?>" class="underline">Logout</a>
   </div>
 </nav>
