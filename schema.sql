@@ -10,3 +10,13 @@ CREATE TABLE payments (id INT AUTO_INCREMENT PRIMARY KEY, tenant_id INT, period_
 -- settings is a singleton row; always use id=1 (INSERT ... ON DUPLICATE KEY UPDATE)
 CREATE TABLE settings (id INT PRIMARY KEY DEFAULT 1, company_name VARCHAR(120), manager_name VARCHAR(120), manager_email VARCHAR(120), manager_whatsapp VARCHAR(32), whatsapp_phone_id VARCHAR(64), whatsapp_token TEXT, smtp_host VARCHAR(120), smtp_port INT, smtp_user VARCHAR(120), smtp_pass TEXT, from_email VARCHAR(120), from_name VARCHAR(120), timezone VARCHAR(64) DEFAULT 'Asia/Dubai', created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE message_logs (id INT AUTO_INCREMENT PRIMARY KEY, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, channel ENUM('whatsapp','email') NOT NULL, recipient VARCHAR(120) NOT NULL, subject VARCHAR(200), body TEXT, status VARCHAR(40) DEFAULT 'sent', error TEXT);
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token CHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used TINYINT(1) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_token (token)
+);

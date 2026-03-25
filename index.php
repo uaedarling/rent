@@ -63,6 +63,9 @@ $csrf = csrf_token();
 </head><body class='bg-gray-50 p-6'>
 <div class='max-w-md mx-auto bg-white p-6 rounded shadow'>
 <h3 class='text-xl font-semibold mb-4'>Rent Manager AED</h3>
+<?php if (($_GET['msg'] ?? '') === 'password_reset'): ?>
+<div class="mb-3 bg-green-50 border border-green-300 text-green-700 rounded p-3">Your password has been reset. Please log in.</div>
+<?php endif; ?>
 <?php if (!empty($err)): ?>
 <div class="mb-3 text-red-600"><?= htmlspecialchars($err) ?></div>
 <?php endif; ?>
@@ -71,6 +74,7 @@ $csrf = csrf_token();
   <div><label class='text-sm'>Email</label><input class='mt-1 block w-full border rounded p-2' name='email' type='email' autocomplete='username'></div>
   <div><label class='text-sm'>Password</label><input class='mt-1 block w-full border rounded p-2' name='password' type='password' autocomplete='current-password'></div>
   <div><button class='w-full bg-red-600 text-white py-2 rounded'>Login</button></div>
+  <div class='text-center text-sm'><a href='/forgot_password.php' class='text-red-600 hover:underline'>Forgot password?</a></div>
 </form>
 </div>
 </body></html>
