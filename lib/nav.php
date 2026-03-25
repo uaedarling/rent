@@ -11,6 +11,8 @@ $nav_csrf = csrf_token();
     <a href="/units.php" class="hover:underline">Units</a>
     <a href="/tenants.php" class="hover:underline">Tenants</a>
     <a href="/payments.php" class="hover:underline">Payments</a>
+    <a href="/pending.php" class="hover:underline">Pending</a>
+    <a href="/import.php" class="hover:underline">Import</a>
     <a href="/ledger.php" class="hover:underline">Ledger</a>
     <a href="/settings.php" class="hover:underline">Settings</a>
     <?php if ($nav_role === 'admin'): ?>
