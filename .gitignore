@@ -2,5 +2,7 @@ config.php
 installed.lock
 error_log
 *.log
+uploads/deposits/*
+!uploads/deposits/.gitkeep
 .env
 admin_reset.enable

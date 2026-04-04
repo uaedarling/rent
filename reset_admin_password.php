@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <?php if ($success): ?>
-    <div class="success">✅ Admin password has been updated successfully. <a href="/index.php">Go to login</a></div>
+    <div class="success">✅ Admin password has been updated successfully. <a href="index.php">Go to login</a></div>
   <?php else: ?>
     <form method="post">
       <label>Admin email address</label>

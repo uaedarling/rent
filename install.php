@@ -99,10 +99,22 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // Run schema
             run_sql_file($pdo, __DIR__ . '/schema.sql');
 
-            // Run migration if it exists
-            $migration = __DIR__ . '/migrations/001_add_password_resets.sql';
-            if (file_exists($migration)) {
-                run_sql_file($pdo, $migration);
+            // Run migrations if they exist
+            $migrations = [
+                __DIR__ . '/migrations/001_add_password_resets.sql',
+                __DIR__ . '/migrations/002_add_whatsapp_template.sql',
+                __DIR__ . '/migrations/003_add_deposits_table.sql',
+            ];
+            foreach ($migrations as $migration) {
+                if (file_exists($migration)) {
+                    run_sql_file($pdo, $migration);
+                }
+            }
+
+            // Create uploads/deposits directory
+            $uploads_dir = __DIR__ . '/uploads/deposits';
+            if (!is_dir($uploads_dir)) {
+                mkdir($uploads_dir, 0755, true);
             }
 
             // Create admin user
@@ -159,6 +171,7 @@ if ($step === 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <p>✔ Admin account created (<strong><?= htmlspecialchars($admin_email) ?></strong>)</p>
     <p>✔ <code>config.php</code> written</p>
     <p>✔ <code>installed.lock</code> created</p>
+    <p>✔ <code>uploads/deposits/</code> directory created</p>
     <?php if ($smtp_user): ?><p>✔ SMTP configured (<?= htmlspecialchars($smtp_user) ?>)</p><?php endif; ?>
   </div>
   <a href="<?= $login_url ?>" class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition mb-4">

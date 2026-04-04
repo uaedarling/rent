@@ -58,6 +58,18 @@ if ($filter_month && preg_match('/^\d{4}-\d{2}$/', $filter_month)) {
 }
 
 $csrf = csrf_token();
+
+// Build set of deposited payment IDs for all displayed payments (avoid N+1 queries)
+$deposited_ids = [];
+if (!empty($payments)) {
+    $pids = array_column($payments, 'id');
+    $placeholders = implode(',', array_fill(0, count($pids), '?'));
+    $dep_check = $pdo->prepare("SELECT payment_id FROM deposits WHERE payment_id IN ($placeholders)");
+    $dep_check->execute($pids);
+    foreach ($dep_check->fetchAll() as $d) {
+        $deposited_ids[$d['payment_id']] = true;
+    }
+}
 ?>
 <!doctype html>
 <html>
@@ -137,6 +149,7 @@ $csrf = csrf_token();
         <th class="p-2 text-left">Period</th>
         <th class="p-2 text-right">Amount</th>
         <th class="p-2 text-center">Receipt</th>
+        <th class="p-2 text-center">Deposit</th>
       </tr>
     </thead>
     <tbody>
@@ -152,10 +165,19 @@ $csrf = csrf_token();
           <a href="receipt.php?id=<?= intval($p['id']) ?>&token=<?= htmlspecialchars($receipt_token) ?>"
              class="text-blue-600 hover:underline" target="_blank">🖨 Receipt</a>
         </td>
+        <td class="p-2 text-center">
+          <?php if (!empty($deposited_ids[$p['id']])): ?>
+          <a href="deposit.php?payment_id=<?= intval($p['id']) ?>"
+             class="text-green-600 hover:underline text-sm font-medium">✅ Deposited</a>
+          <?php else: ?>
+          <a href="deposit.php?payment_id=<?= intval($p['id']) ?>"
+             class="text-orange-500 hover:underline text-sm font-medium">⚠️ Add Deposit</a>
+          <?php endif; ?>
+        </td>
       </tr>
       <?php endforeach; ?>
       <?php if (empty($payments)): ?>
-      <tr><td colspan="6" class="p-4 text-center text-gray-500">No payments found.</td></tr>
+      <tr><td colspan="7" class="p-4 text-center text-gray-500">No payments found.</td></tr>
       <?php endif; ?>
     </tbody>
   </table>

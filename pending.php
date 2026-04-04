@@ -100,7 +100,7 @@ $csrf = csrf_token();
 <div class="max-w-6xl mx-auto px-4 py-6">
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-semibold">Pending Payments</h2>
-    <a href="/pending.php?tab=<?= htmlspecialchars($activeTab) ?>&export=csv"
+    <a href="pending.php?tab=<?= htmlspecialchars($activeTab) ?>&export=csv"
        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
       ⬇ Export CSV
     </a>
@@ -125,7 +125,7 @@ $csrf = csrf_token();
   <!-- Tabs -->
   <div class="flex gap-2 mb-4">
     <?php foreach ($tabLabels as $key => $label): ?>
-    <a href="/pending.php?tab=<?= $key ?>"
+    <a href="pending.php?tab=<?= $key ?>"
        class="px-4 py-2 rounded text-sm font-medium <?= $activeTab === $key
          ? 'bg-red-700 text-white'
          : 'bg-white text-gray-700 hover:bg-gray-100 border' ?>">
@@ -174,7 +174,7 @@ $csrf = csrf_token();
           </td>
           <td class="p-3 text-center">
             <?php if ($r['status'] !== 'PAID'): ?>
-            <a href="/payments.php?tenant_id=<?= intval($r['id']) ?>&period=<?= htmlspecialchars($periods[$activeTab]) ?>"
+            <a href="payments.php?tenant_id=<?= intval($r['id']) ?>&period=<?= htmlspecialchars($periods[$activeTab]) ?>"
                class="bg-red-600 text-white text-xs px-3 py-1 rounded hover:bg-red-700">
               Record Payment
             </a>

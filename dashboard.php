@@ -70,7 +70,7 @@ $pending_count = (int)$pending_stmt->fetchColumn();
       <div class="text-2xl font-bold <?= $pending_count > 0 ? 'text-red-600' : 'text-green-600' ?>">
         <?= $pending_count ?>
       </div>
-      <a href="/pending.php" class="text-xs text-blue-600 hover:underline">View Pending →</a>
+      <a href="<?= htmlspecialchars(APP_BASE_URL) ?>pending.php" class="text-xs text-blue-600 hover:underline">View Pending →</a>
     </div>
   </div>
 
@@ -78,12 +78,13 @@ $pending_count = (int)$pending_stmt->fetchColumn();
   <div class="bg-white p-4 rounded shadow">
     <h4 class="text-sm font-medium text-gray-500 mb-3">Quick Links</h4>
     <div class="flex flex-wrap gap-3">
-      <a href="/units.php"    class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Units</a>
-      <a href="/tenants.php"  class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Tenants</a>
-      <a href="/payments.php" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Payments</a>
-      <a href="/pending.php"  class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded text-sm">Pending</a>
-      <a href="/import.php"   class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Import</a>
-      <a href="/settings.php" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Settings</a>
+      <?php $b = htmlspecialchars(APP_BASE_URL); ?>
+      <a href="<?= $b ?>units.php"    class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Units</a>
+      <a href="<?= $b ?>tenants.php"  class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Tenants</a>
+      <a href="<?= $b ?>payments.php" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Payments</a>
+      <a href="<?= $b ?>pending.php"  class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded text-sm">Pending</a>
+      <a href="<?= $b ?>import.php"   class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Import</a>
+      <a href="<?= $b ?>settings.php" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm">Settings</a>
     </div>
   </div>
 </div>
