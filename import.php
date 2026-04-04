@@ -178,7 +178,7 @@ $csrf = csrf_token();
         Download the sample CSV template, fill in your payment data, then upload it below.
         Columns: <code class="bg-gray-100 px-1 rounded">unit_no, tenant_name, period_ym, amount_aed, paid_at, method</code>
       </p>
-      <a href="/import.php?action=sample"
+      <a href="import.php?action=sample"
          class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
         ⬇ Download Sample CSV
       </a>

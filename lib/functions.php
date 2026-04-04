@@ -34,8 +34,8 @@ function send_receipt_email($tenant_id, $payment_id) {
     $settings = get_settings();
     $company  = htmlspecialchars($settings['company_name'] ?? 'Rent Manager');
     $host        = preg_replace('/[^a-zA-Z0-9.\-:]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
-    $ledger_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
-        . '://' . $host . '/ledger.php?token=' . $row['ledger_token'];
+    $ledger_link = (defined('APP_BASE_URL') ? APP_BASE_URL : 'http://' . $host . '/')
+        . 'ledger.php?token=' . $row['ledger_token'];
     $receipt_no = '#' . str_pad($row['id'], 6, '0', STR_PAD_LEFT);
     $period_fmt = date('F Y', strtotime($row['period_ym'] . '-01'));
     $subject = "Payment Receipt – " . $receipt_no . " – Unit " . $row['unit_no'];
@@ -120,7 +120,8 @@ function send_whatsapp_receipt($tenant_id, $payment_id) {
     $scheme      = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host        = preg_replace('/[^a-zA-Z0-9.\-]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
     $hmac        = hash_hmac('sha256', $payment_id, DB_PASS);
-    $receipt_url = $scheme . '://' . $host . '/rent/receipt.php?id=' . intval($payment_id) . '&token=' . $hmac;
+    $receipt_url = (defined('APP_BASE_URL') ? APP_BASE_URL : $scheme . '://' . $host . '/')
+        . 'receipt.php?id=' . intval($payment_id) . '&token=' . $hmac;
     $period_fmt  = date('F Y', strtotime($row['period_ym'] . '-01'));
     $params = [
         ['type' => 'text', 'text' => $row['full_name']],

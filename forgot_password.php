@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="mb-4 bg-green-50 border border-green-300 text-green-700 rounded p-3">
       If that email exists, a reset link has been sent.
     </div>
-    <p class="text-sm text-gray-600"><a href="/index.php" class="text-red-600 hover:underline">Back to login</a></p>
+    <p class="text-sm text-gray-600"><a href="index.php" class="text-red-600 hover:underline">Back to login</a></p>
   <?php else: ?>
     <?php if (!empty($msg)): ?>
       <div class="mb-3 text-red-600"><?= htmlspecialchars($msg) ?></div>
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input class="mt-1 block w-full border rounded p-2" type="email" name="email" required autocomplete="email">
       </div>
       <div><button class="w-full bg-red-600 text-white py-2 rounded">Send Reset Link</button></div>
-      <div class="text-center text-sm"><a href="/index.php" class="text-red-600 hover:underline">Back to login</a></div>
+      <div class="text-center text-sm"><a href="index.php" class="text-red-600 hover:underline">Back to login</a></div>
     </form>
   <?php endif; ?>
 </div>

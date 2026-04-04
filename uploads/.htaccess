@@ -1,0 +1,5 @@
+Options -Indexes
+
+<FilesMatch "\.php$">
+  deny from all
+</FilesMatch>

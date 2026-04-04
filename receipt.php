@@ -43,6 +43,8 @@ $period_fmt = date('F Y', strtotime($pay['period_ym'] . '-01'));
 <div class='no-print mb-4 flex gap-3'>
   <a href='payments.php' class='text-sm text-blue-600 hover:underline'>← Back to Payments</a>
   <button onclick='window.print()' class='bg-red-600 text-white text-sm px-4 py-1 rounded'>🖨 Print Receipt</button>
+  <a href='<?= htmlspecialchars((defined('APP_BASE_URL') ? APP_BASE_URL : '') . 'deposit.php?payment_id=' . intval($pay['id'])) ?>'
+     class='bg-orange-500 text-white text-sm px-4 py-1 rounded hover:bg-orange-600'>📎 Attach Deposit Slip</a>
 </div>
 
 <div class='max-w-xl mx-auto bg-white rounded-lg shadow overflow-hidden'>

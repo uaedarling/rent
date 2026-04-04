@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('UPDATE password_resets SET used = 1 WHERE token = ?')
                     ->execute([$post_token]);
                 unset($_SESSION['rp_csrf']);
-                header('Location: /index.php?msg=password_reset');
+                header('Location: ' . APP_BASE_URL . 'index.php?msg=password_reset');
                 exit;
             }
             // Keep token in scope for form re-render on error
@@ -82,9 +82,9 @@ $rp_csrf = $_SESSION['rp_csrf'] ?? '';
   <?php endif; ?>
   <?php if (!$reset && empty($error)): ?>
     <div class="mb-4 text-red-600">This reset link is invalid or has expired.</div>
-    <p class="text-sm"><a href="/forgot_password.php" class="text-red-600 hover:underline">Request a new reset link</a></p>
+    <p class="text-sm"><a href="forgot_password.php" class="text-red-600 hover:underline">Request a new reset link</a></p>
   <?php elseif (!$reset && !empty($error)): ?>
-    <p class="text-sm"><a href="/forgot_password.php" class="text-red-600 hover:underline">Request a new reset link</a></p>
+    <p class="text-sm"><a href="forgot_password.php" class="text-red-600 hover:underline">Request a new reset link</a></p>
   <?php else: ?>
     <p class="text-sm text-gray-600 mb-4">Enter your new password below.</p>
     <form method="post" class="space-y-3">

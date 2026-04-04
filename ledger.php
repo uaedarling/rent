@@ -66,7 +66,7 @@ if ($token !== '') {
         . '<body class="bg-gray-50 flex items-center justify-center min-h-screen">'
         . '<div class="text-center"><h1 class="text-4xl font-bold text-gray-700 mb-2">404</h1>'
         . '<p class="text-gray-500">Ledger not found. Please use your personal ledger link.</p>'
-        . '<p class="mt-2"><a href="/index.php" class="text-blue-600 hover:underline">Login</a></p>'
+        . '<p class="mt-2"><a href="index.php" class="text-blue-600 hover:underline">Login</a></p>'
         . '</div></body></html>';
     exit;
 }
@@ -166,7 +166,7 @@ $outstanding = max(0, $monthlyRent - $paidThisMonth);
       </h3>
       <div class="flex gap-2 no-print">
         <?php if ($loggedIn): ?>
-        <a href="/ledger.php" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded">← Back</a>
+        <a href="ledger.php" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded">← Back</a>
         <?php endif; ?>
         <button onclick="window.print()" class="text-sm bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded">
           🖨 Print Ledger
@@ -198,7 +198,7 @@ $outstanding = max(0, $monthlyRent - $paidThisMonth);
           <td class="p-2"><?= htmlspecialchars($p['method']) ?></td>
           <?php if ($loggedIn): ?>
           <td class="p-2 no-print">
-            <a href="/receipt.php?id=<?= intval($p['id']) ?>" target="_blank"
+            <a href="receipt.php?id=<?= intval($p['id']) ?>" target="_blank"
                class="text-blue-600 hover:underline text-xs">🖨 Receipt</a>
           </td>
           <?php endif; ?>
