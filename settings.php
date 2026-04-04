@@ -6,18 +6,20 @@ $pdo = db();
 $settings = get_settings();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) { header('Location: settings.php'); exit; }
-    $stmt = $pdo->prepare('INSERT INTO settings (id, company_name, manager_name, manager_email, manager_whatsapp, whatsapp_phone_id, whatsapp_token, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name, timezone)
-        VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    $stmt = $pdo->prepare('INSERT INTO settings (id, company_name, manager_name, manager_email, manager_whatsapp, whatsapp_phone_id, whatsapp_token, whatsapp_template, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name, timezone)
+        VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             company_name=VALUES(company_name), manager_name=VALUES(manager_name),
             manager_email=VALUES(manager_email), manager_whatsapp=VALUES(manager_whatsapp),
             whatsapp_phone_id=VALUES(whatsapp_phone_id), whatsapp_token=VALUES(whatsapp_token),
+            whatsapp_template=VALUES(whatsapp_template),
             smtp_host=VALUES(smtp_host), smtp_port=VALUES(smtp_port),
             smtp_user=VALUES(smtp_user), smtp_pass=VALUES(smtp_pass),
             from_email=VALUES(from_email), from_name=VALUES(from_name), timezone=VALUES(timezone)');
     $stmt->execute([
         $_POST['company_name'], $_POST['manager_name'], $_POST['manager_email'],
         $_POST['manager_whatsapp'], $_POST['whatsapp_phone_id'], $_POST['whatsapp_token'],
+        $_POST['whatsapp_template'] ?? 'payment_receipt',
         $_POST['smtp_host'], $_POST['smtp_port'], $_POST['smtp_user'], $_POST['smtp_pass'],
         $_POST['from_email'], $_POST['from_name'], $_POST['timezone'],
     ]);
@@ -44,6 +46,17 @@ $csrf = csrf_token();
   <div class='grid grid-cols-2 gap-2'>
     <input name='whatsapp_phone_id' class='border p-2 rounded' placeholder='Phone ID' value='<?= htmlspecialchars($settings['whatsapp_phone_id'] ?? '') ?>'>
     <input name='whatsapp_token' class='border p-2 rounded' placeholder='Token' value='<?= htmlspecialchars($settings['whatsapp_token'] ?? '') ?>'>
+  </div>
+  <div>
+    <label class='text-sm'>WhatsApp Template Name</label>
+    <input name='whatsapp_template' class='mt-1 block w-full border p-2 rounded' placeholder='payment_receipt' value='<?= htmlspecialchars($settings['whatsapp_template'] ?? 'payment_receipt') ?>'>
+  </div>
+  <div class='bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800'>
+    <strong>Template format:</strong> Your approved WhatsApp template must have 6 body variables:<br>
+    <code class='text-xs bg-blue-100 px-1 rounded block mt-1'>
+      "Dear {{1}}, we received your payment of AED {{2}} for unit {{3}} period {{4}} on {{5}}. View your receipt: {{6}} Thank you!"
+    </code>
+    <p class='mt-1 text-xs text-blue-700'>{{1}} = Tenant name, {{2}} = Amount, {{3}} = Unit, {{4}} = Period, {{5}} = Payment date, {{6}} = Receipt link (auto-generated)</p>
   </div>
   <h5 class='mt-2 font-medium'>SMTP</h5>
   <div class='grid grid-cols-2 gap-2'>

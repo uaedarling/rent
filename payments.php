@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['tenant_id'])) {
     $stmt->execute([$tenant_id, $period, $amount, $paid_at, $method]);
     $payment_id = $pdo->lastInsertId();
     send_receipt_email($tenant_id, $payment_id);
+    send_whatsapp_receipt($tenant_id, $payment_id);
     header('Location: payments.php'); exit;
 }
 
@@ -147,7 +148,8 @@ $csrf = csrf_token();
         <td class="p-2"><?= htmlspecialchars($p['period_ym']) ?></td>
         <td class="p-2 text-right"><?= number_format($p['amount_aed'], 2) ?></td>
         <td class="p-2 text-center">
-          <a href="receipt.php?id=<?= intval($p['id']) ?>"
+          <?php $receipt_token = hash_hmac('sha256', $p['id'], DB_PASS); ?>
+          <a href="receipt.php?id=<?= intval($p['id']) ?>&token=<?= htmlspecialchars($receipt_token) ?>"
              class="text-blue-600 hover:underline" target="_blank">🖨 Receipt</a>
         </td>
       </tr>

@@ -1,10 +1,22 @@
 <?php
 require_once 'lib/auth.php';
 require_once 'lib/db.php';
-require_login();
 
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) { header('Location: payments.php'); exit; }
+
+// Allow access via signed token (for tenants opening link from WhatsApp)
+$token_provided = isset($_GET['token']);
+if ($token_provided) {
+    $expected = hash_hmac('sha256', $id, DB_PASS);
+    if (!hash_equals($expected, (string)$_GET['token'])) {
+        http_response_code(403);
+        echo '<p>Invalid or expired receipt link.</p>';
+        exit;
+    }
+} else {
+    require_login();
+}
 
 $pdo  = db();
 $stmt = $pdo->prepare('SELECT p.*, t.full_name, t.email, u.unit_no FROM payments p JOIN tenants t ON t.id=p.tenant_id JOIN units u ON u.id=t.unit_id WHERE p.id=?');
