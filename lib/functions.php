@@ -104,6 +104,64 @@ function send_password_reset_email($to, $reset_link, $settings) {
     </body></html>';
     return smtp_send($to, $subject, $html, $settings);
 }
+function send_whatsapp_receipt($tenant_id, $payment_id) {
+    $pdo = db();
+    $stmt = $pdo->prepare('SELECT p.*, t.full_name, t.phone, u.unit_no FROM payments p JOIN tenants t ON t.id=p.tenant_id JOIN units u ON u.id=t.unit_id WHERE p.id=?');
+    $stmt->execute([$payment_id]);
+    $row = $stmt->fetch();
+    if (!$row) return false;
+    $settings = get_settings();
+    $phone_id = $settings['whatsapp_phone_id'] ?? '';
+    $token    = $settings['whatsapp_token']    ?? '';
+    $template = $settings['whatsapp_template'] ?? 'payment_receipt';
+    if (!$phone_id || !$token) return false;
+    $to = preg_replace('/[^0-9]/', '', $row['phone'] ?? '');
+    if (!$to) return false;
+    $scheme      = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host        = preg_replace('/[^a-zA-Z0-9.\-]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+    $hmac        = hash_hmac('sha256', $payment_id, DB_PASS);
+    $receipt_url = $scheme . '://' . $host . '/rent/receipt.php?id=' . intval($payment_id) . '&token=' . $hmac;
+    $period_fmt  = date('F Y', strtotime($row['period_ym'] . '-01'));
+    $params = [
+        ['type' => 'text', 'text' => $row['full_name']],
+        ['type' => 'text', 'text' => number_format((float)$row['amount_aed'], 2)],
+        ['type' => 'text', 'text' => $row['unit_no']],
+        ['type' => 'text', 'text' => $period_fmt],
+        ['type' => 'text', 'text' => $row['paid_at']],
+        ['type' => 'text', 'text' => $receipt_url],
+    ];
+    $payload = json_encode([
+        'messaging_product' => 'whatsapp',
+        'to'                => $to,
+        'type'              => 'template',
+        'template'          => [
+            'name'       => $template,
+            'language'   => ['code' => 'en'],
+            'components' => [[
+                'type'       => 'body',
+                'parameters' => $params,
+            ]],
+        ],
+    ]);
+    $url = 'https://graph.facebook.com/v19.0/' . $phone_id . '/messages';
+    $ch  = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $token,
+        ],
+    ]);
+    $resp  = curl_exec($ch);
+    $err   = curl_error($ch);
+    $http  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    $ok = ($http >= 200 && $http < 300 && !$err);
+    log_message('whatsapp', $to, 'payment_receipt', $receipt_url, $ok ? 'sent' : 'failed', $err ?: ($ok ? '' : $resp));
+    return $ok;
+}
 function get_late_tenants() {
     $settings = get_settings();
     $tz = $settings['timezone'] ?? 'Asia/Dubai';
